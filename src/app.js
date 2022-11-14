@@ -11,6 +11,8 @@ const session = require('express-session');
 const RedisStore = require('connect-redis')(session);
 const redis = require('redis');
 
+const config = require('./config.js');
+
 const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/ConfigExample';
 
 mongoose.connect(dbURL, (err) => {
@@ -21,7 +23,7 @@ mongoose.connect(dbURL, (err) => {
 });
 
 const redisURL = process.env.REDISCLOUD_URL || 
-  'REPLACE_WITH_YOUR_REDISCLOUD_URL';
+  'redis://default:OSmpUEUSQJgDV7u092up3YI3x0LM3JIQ@redis-10538.c84.us-east-1-2.ec2.cloud.redislabs.com:10538';
 
 const redisClient = redis.createClient({
   legacyMode: true,
@@ -36,7 +38,7 @@ const router = require('./router.js');
 const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const app = express();
-app.use('/assets', express.static(path.resolve(`${__dirname}../../client/`)));
+app.use('/assets', express.static(path.resolve(config.staticAssets.path)));
 app.use(compression());
 app.use(bodyParser.urlencoded({
   extended: true,
@@ -58,7 +60,7 @@ app.use(session({
 app.engine('handlebars', expressHandlebars.engine({ defaultLayout: '' }));
 app.set('view engine', 'handlebars');
 app.set('views', `${__dirname}/../views`);
-app.use(favicon(path.resolve(`${__dirname}/../client/img/favicon.png`)));
+app.use(favicon(path.resolve(`${config.staticAssets.path}/img/favicon.png`)));
 app.use(cookieParser());
 
 router(app);
