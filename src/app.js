@@ -13,29 +13,22 @@ const redis = require('redis');
 
 const config = require('./config.js');
 
-const dbURL = process.env.MONGODB_URI || 'mongodb://localhost/ConfigExample';
-
-mongoose.connect(dbURL, (err) => {
+mongoose.connect(config.connections.mongo, (err) => {
   if (err) {
     console.log('Could not connect to database');
     throw err;
   }
 });
 
-const redisURL = process.env.REDISCLOUD_URL || 
-  'redis://default:OSmpUEUSQJgDV7u092up3YI3x0LM3JIQ@redis-10538.c84.us-east-1-2.ec2.cloud.redislabs.com:10538';
-
 const redisClient = redis.createClient({
   legacyMode: true,
-  url: redisURL,
+  url: config.connections.redis,
 });
 redisClient.connect().catch(console.error);
 
 
 // pull in our routes
 const router = require('./router.js');
-
-const port = process.env.PORT || process.env.NODE_PORT || 3000;
 
 const app = express();
 app.use('/assets', express.static(path.resolve(config.staticAssets.path)));
@@ -49,7 +42,7 @@ app.use(session({
   store: new RedisStore({
     client: redisClient,
   }),
-  secret: 'Secret Session Key',
+  secret: config.secret,
   resave: true,
   saveUninitialized: true,
   cookie: {
@@ -65,9 +58,9 @@ app.use(cookieParser());
 
 router(app);
 
-app.listen(port, (err) => {
+app.listen(config.connections.http.port, (err) => {
   if (err) {
     throw err;
   }
-  console.log(`Listening on port ${port}`);
+  console.log(`Listening on port ${config.connections.http.port}`);
 });
